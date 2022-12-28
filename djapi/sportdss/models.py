@@ -77,6 +77,7 @@ class BaseCategory(models.Model):
 
 class Service(models.Model):
     '''\
+        Точка входа о услугах и секциях.
         спортивная услуга реализуемая на объекте, правила, тарифы, регламент работы
         запись, покупка, бронирование '''
     class Meta:
@@ -100,6 +101,32 @@ class Service(models.Model):
     def __str__(self):
         return f"{self.name}"
 
+class About(models.Model):
+    '''\
+        Точка входа подробной информации о предприятиях
+        Информация о предприятии, контакты, документы, 
+        раскрытие информации, руководство, обратная связь
+        новостная лента по предприятиям и услугам'''
+    class Meta:
+        verbose_name = 'пункт "о нас"'
+        verbose_name_plural = '"О нас"'
+    name = models.CharField(
+        'название подраздела', 
+        max_length=60
+    )
+    description = RichTextUploadingField(
+        'краткое описание', 
+        max_length=1000
+    )
+    category = models.ForeignKey(
+        BaseCategory, 
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True
+    )
+    
+    def __str__(self):
+        return f"{self.name}"
 class Managment(models.Model):
     '''\
         Руководство подразделения '''
@@ -114,8 +141,21 @@ class Managment(models.Model):
         'ФИО', 
         max_length=60
     )
-    category = models.ForeignKey(
-        BaseCategory, 
+    
+    photo = models.ImageField(
+        'Фотография',
+        null=True,
+        blank=True
+    )
+    object = models.ForeignKey(
+        'Object',
+        verbose_name='Объект',
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True
+    )
+    about = models.ForeignKey(
+        About, 
         on_delete=models.DO_NOTHING,
         null=True,
         blank=True
@@ -124,9 +164,93 @@ class Managment(models.Model):
     def __str__(self):
         return f"{self.job_title} {self.full_name}"
 
+class Contact(models.Model):
+    '''\
+        Контакты объектов, подразделений, менеджеров услуг '''
+    class Meta:
+        verbose_name = 'Контакт'
+        verbose_name_plural = 'Контакты'
+    name = models.CharField(
+        'название контакта', 
+        max_length=20
+    )
+    description = models.TextField(
+        'описание контакта',
+        max_length=60
+    )
+    about = models.ForeignKey(
+        'About',
+        verbose_name='"о нас"',
+        on_delete=models.DO_NOTHING
+    )
+    object = models.ForeignKey(
+        'Object',
+        verbose_name='Объект',
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True
+    )
 
+
+    def __str__(self):
+        return f'{self.name} ({self.description})' 
+
+class WorkingMode(models.Model):
+    '''\
+        Режим работы для контактов'''
+    class Meta:
+        verbose_name = 'режим работы'
+        verbose_name_plural = 'режимы работ'
+    mode = RichTextUploadingField(
+        'режим работы', 
+        max_length=300,
+    )
+    contact = models.ForeignKey(
+        Contact,
+        verbose_name='Контакт',
+        on_delete=models.DO_NOTHING
+    )
+class Phone(models.Model):
+    '''\
+        Номера телефонов для контактов'''
+    class Meta:
+        verbose_name = 'Телефон'
+        verbose_name_plural = 'Телефоны'
+    phone = models.CharField(
+        'телефонный номер', 
+        max_length=60,
+        # validators=[
+        #      RegexValidator(
+        #          regex=u'^[0-9\(\)\-\+,\'\s]+$',
+        #          message=u'Это поле может содержать только номер телефона в формате "+7(999)999-99-99"',
+        #          code='invalid_symbols'
+        #      )
+        #  ],
+    )
+    contact = models.ForeignKey(
+        Contact,
+        verbose_name='Контакт',
+        on_delete=models.DO_NOTHING,
+    )   
+
+class Email(models.Model):
+    '''\
+        Электронная почта для контактов'''
+    class Meta:
+        verbose_name = 'электронный адрес'
+        verbose_name_plural = 'электронные адреса'
+    email = models.EmailField(
+        'электронный адрес', 
+        max_length=60
+    )
+    contact = models.ForeignKey(
+        Contact,
+        verbose_name='Контакт',
+        on_delete=models.DO_NOTHING,
+    )   
 class Object(models.Model):
     '''\
+        Точка входа о объектах
         реквизиты, адрес, геометка, руководство и контакты,
         список услуг, список фотографий '''
     class Meta:
@@ -138,15 +262,18 @@ class Object(models.Model):
     
     short_name = models.CharField(
         'краткое имя', 
-        max_length=MAX_SHORT_NAME
+        max_length=MAX_SHORT_NAME,
+        help_text=f'Короткое имя объекта (не более {MAX_SHORT_NAME} символов)'
     )
     long_name = models.CharField(
         'официальное имя', 
-        max_length=MAX_LONG_NAME
+        max_length=MAX_LONG_NAME,
+        help_text=f'Ролное официальное имя (не более {MAX_LONG_NAME}  символов)'
     )
     address = models.CharField(
         'адрес', 
-        max_length=200
+        max_length=200,
+        help_text='Адрес совместимый с GeoAPI'
     )
     contacts = models.CharField(
         'контакты', 
@@ -154,13 +281,14 @@ class Object(models.Model):
     )
     category = models.ForeignKey(
         BaseCategory, 
+        verbose_name='Категория',
         on_delete=models.DO_NOTHING,
         null=True,
         blank=True
     )
     service = models.ManyToManyField(
         Service,
-        help_text='выберите доступные спортивные услуги'
+        help_text='выберите доступные на объекте спортивные и прочие услуги, спортивные секции. '
     )
 
     def __str__(self):
@@ -177,6 +305,8 @@ class Object(models.Model):
         serv_lst = [service for service in self.service.all()]
         return ', '.join([item.name for item in serv_lst if item.category.id == 259])
     display_sportsection.short_description = 'Спортивные секции'
+
+
 
 # class PageOld(models.Model):
 #     '''\
