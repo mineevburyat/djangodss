@@ -40,4 +40,4 @@ class EmailAdmin(admin.ModelAdmin):
 
 @admin.register(WorkingMode)
 class WorkingModeAdmin(admin.ModelAdmin):
-    list_display = ('contact', 'mode')
+    list_display = ('contact', 'display_mode')
