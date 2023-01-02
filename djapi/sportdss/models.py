@@ -127,73 +127,6 @@ class About(models.Model):
     
     def __str__(self):
         return f"{self.name}"
-class Managment(models.Model):
-    '''\
-        Руководство подразделения '''
-    class Meta:
-        verbose_name = 'Руководитель'
-        verbose_name_plural = 'Руководители'
-    job_title = models.CharField(
-        'должность', 
-        max_length=60
-    )
-    full_name = models.CharField(
-        'ФИО', 
-        max_length=60
-    )
-    
-    photo = models.ImageField(
-        'Фотография',
-        null=True,
-        blank=True
-    )
-    object = models.ForeignKey(
-        'Object',
-        verbose_name='Объект',
-        on_delete=models.DO_NOTHING,
-        null=True,
-        blank=True
-    )
-    about = models.ForeignKey(
-        About, 
-        on_delete=models.DO_NOTHING,
-        null=True,
-        blank=True
-    )
-
-    def __str__(self):
-        return f"{self.job_title} {self.full_name}"
-
-class Contact(models.Model):
-    '''\
-        Контакты объектов, подразделений, менеджеров услуг '''
-    class Meta:
-        verbose_name = 'Контакт'
-        verbose_name_plural = 'Контакты'
-    name = models.CharField(
-        'название контакта', 
-        max_length=20
-    )
-    description = models.TextField(
-        'описание контакта',
-        max_length=60
-    )
-    about = models.ForeignKey(
-        'About',
-        verbose_name='"о нас"',
-        on_delete=models.DO_NOTHING
-    )
-    object = models.ForeignKey(
-        'Object',
-        verbose_name='Объект',
-        on_delete=models.DO_NOTHING,
-        null=True,
-        blank=True
-    )
-
-
-    def __str__(self):
-        return f'{self.name} ({self.description})' 
 
 class WorkingMode(models.Model):
     '''\
@@ -206,7 +139,7 @@ class WorkingMode(models.Model):
         max_length=300,
     )
     contact = models.ForeignKey(
-        Contact,
+        'Contact',
         verbose_name='Контакт',
         on_delete=models.DO_NOTHING
     )
@@ -228,7 +161,7 @@ class Phone(models.Model):
         #  ],
     )
     contact = models.ForeignKey(
-        Contact,
+        'Contact',
         verbose_name='Контакт',
         on_delete=models.DO_NOTHING,
     )   
@@ -244,10 +177,98 @@ class Email(models.Model):
         max_length=60
     )
     contact = models.ForeignKey(
-        Contact,
+        'Contact',
         verbose_name='Контакт',
         on_delete=models.DO_NOTHING,
-    )   
+    )
+
+class Contact(models.Model):
+    '''\
+        Контакты объектов, подразделений, менеджеров услуг '''
+    class Meta:
+        verbose_name = 'Контакт'
+        verbose_name_plural = 'Контакты'
+    name = models.CharField(
+        'название контакта', 
+        max_length=35
+    )
+    description = models.TextField(
+        'описание контакта',
+        max_length=100
+    )
+    about = models.ForeignKey(
+        'About',
+        verbose_name='"о нас"',
+        on_delete=models.DO_NOTHING,
+        blank=True,
+        null=True,
+        help_text='не выбирать если не надо отображать в пункте меню "о нас - контакты"'
+    )
+    object = models.ForeignKey(
+        'Object',
+        verbose_name='Объект',
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return f'{self.description}' 
+
+    def display_phones(self):
+        phone_lst = Phone.objects.filter(contact=self.id)
+        return ', '.join([phone.phone for phone in phone_lst])
+    display_phones.short_description = "телефоны"
+
+    def display_email(self):
+        email_lst = Email.objects.filter(contact=self.id)
+        return ', '.join([email.email for email in email_lst])
+    display_email.short_description = "электронная почта"
+
+class Managment(models.Model):
+    '''\
+        Руководство подразделения '''
+    class Meta:
+        verbose_name = 'Руководитель'
+        verbose_name_plural = 'Руководители'
+    job_title = models.CharField(
+        'должность', 
+        max_length=60
+    )
+    full_name = models.CharField(
+        'ФИО', 
+        max_length=60
+    )
+    photo = models.ImageField(
+        'Фотография',
+        null=True,
+        blank=True
+    )
+    object = models.ForeignKey(
+        'Object',
+        verbose_name='Объект',
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True
+    )
+    about = models.ForeignKey(
+        About, 
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True
+    )
+    contact = models.ForeignKey(
+        Contact,
+        verbose_name="Контакты",
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True
+    )
+
+    def __str__(self):
+        return f"{self.job_title} {self.full_name}"
+
+
 class Object(models.Model):
     '''\
         Точка входа о объектах

@@ -20,7 +20,7 @@ class ServiceAdmin(admin.ModelAdmin):
 
 @admin.register(Managment)
 class ManagmentAdmin(admin.ModelAdmin):
-    list_display = ('full_name', 'job_title', 'object', 'photo', 'about')
+    list_display = ('full_name', 'job_title', 'object', 'photo', 'contact', 'about')
 
 @admin.register(About)
 class AboutAdmin(admin.ModelAdmin):
@@ -28,7 +28,7 @@ class AboutAdmin(admin.ModelAdmin):
 
 @admin.register(Contact)
 class ContactAdmin(admin.ModelAdmin):
-    list_display = ('name', 'description', 'object', 'about')
+    list_display = ('name', 'description', 'object', 'display_phones', 'display_email', 'about')
 
 @admin.register(Phone)
 class PhoneAdmin(admin.ModelAdmin):
