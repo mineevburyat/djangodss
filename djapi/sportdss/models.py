@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+import re
 
 from ckeditor_uploader.fields import RichTextUploadingField
 
@@ -143,6 +144,17 @@ class WorkingMode(models.Model):
         verbose_name='Контакт',
         on_delete=models.DO_NOTHING
     )
+
+    def __str__(self):
+        txt = re.sub(r'\<[^>]*\>', '', self.mode)
+        txt = txt.replace('&mdash;', '-')
+        return f"{self.contact} {txt}"
+
+    def display_mode(self):
+        txt = re.sub(r'\<[^>]*\>', '', self.mode)
+        txt = txt.replace('&mdash;', '-')
+        return f"{txt}"
+    display_mode.short_description = "режим работы"
 class Phone(models.Model):
     '''\
         Номера телефонов для контактов'''
@@ -164,7 +176,10 @@ class Phone(models.Model):
         'Contact',
         verbose_name='Контакт',
         on_delete=models.DO_NOTHING,
-    )   
+    )
+
+    def __str__(self):
+        return f"{self.contact} {self.phone}"   
 
 class Email(models.Model):
     '''\
@@ -181,6 +196,8 @@ class Email(models.Model):
         verbose_name='Контакт',
         on_delete=models.DO_NOTHING,
     )
+    def __str__(self):
+        return f"{self.contact} {self.email}"
 
 class Contact(models.Model):
     '''\
@@ -268,7 +285,46 @@ class Managment(models.Model):
     def __str__(self):
         return f"{self.job_title} {self.full_name}"
 
+class Document(models.Model):
+    '''\
+        Документы контакта или объекта.
+        Закупки, уставные документы, правила, тарифы и пр. '''
+    class Meta:
+        verbose_name = 'Документ'
+        verbose_name_plural = 'Документы'
 
+    TYPE_DOC = (
+        ('status', 'уставные документы'),
+        ('tarif', 'расценки'),
+        ('contract', 'договор'),
+        ('cert', 'сертификаты'),
+        ('rules', 'правила'),
+        ('reports', 'отчеты'),
+        ('purchase', 'закупки'),
+        ('work', 'охрана труда'),
+        ('tax', 'налоговый вычет'),
+    )
+    type_doc = models.CharField(
+        'тип документа', 
+        max_length=10,
+        choices=TYPE_DOC,
+        blank=True,
+        default='reports',
+        help_text='выберите тип документа'
+    )
+    url = models.URLField(
+        'ссылка на яндекс диск',
+
+    )
+
+
+class Page(models.Model):
+    '''\
+        Страница оформленная в html '''
+    class Meta:
+        verbose_name = 'Страница'
+        verbose_name_plural = 'Страницы'
+    
 class Object(models.Model):
     '''\
         Точка входа о объектах
