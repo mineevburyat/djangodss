@@ -7,12 +7,12 @@ from .models import About, Phone, Email, Contact, WorkingMode
 # 
 @admin.register(Object)
 class ObjectAdmin(admin.ModelAdmin):
-    list_display = ('short_name', 'long_name', 'address', 'category', 'display_service', 'display_sportsection')
+    list_display = ('short_name', 'name', 'address', 'category', 'display_service', 'display_sportsection')
 
 
 @admin.register(BaseCategory)
 class BaseCategoryAdmin(admin.ModelAdmin):
-    list_display = ('id', 'title', 'newname')
+    list_display = ('id', 'slug', 'title', 'newname')
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):

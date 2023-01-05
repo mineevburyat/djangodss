@@ -72,9 +72,27 @@ class BaseCategory(models.Model):
         null=True,
         blank=True
     )
+    slug = models.CharField(
+        'Слуг для url',
+        max_length=15,
+        help_text='краткое название пути в url',
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         return f'{self.newname} ({self.title})'
+
+    def get_submenu(self):
+        if self.id == 2 or self.id == 259 or self.id == 299:
+            lst = [item for item in Service.objects.all() if item.category.id == self.id]
+        elif self.id == 335:
+            lst = [item for item in About.objects.all()]
+        elif self.id == 7632:
+            lst = [item for item in Object.objects.all()]
+        else:
+            lst = []
+        return lst
 
 class Service(models.Model):
     '''\
@@ -94,7 +112,7 @@ class Service(models.Model):
     )
     category = models.ForeignKey(
         BaseCategory, 
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True
     )
@@ -102,6 +120,11 @@ class Service(models.Model):
     def __str__(self):
         return f"{self.name}"
 
+    def display_objects(self):
+        lst = [item.short_name for item in Object.objects.filter(service = self.id) ]
+        return ' '.join(lst)
+
+    
 class About(models.Model):
     '''\
         Точка входа подробной информации о предприятиях
@@ -121,7 +144,7 @@ class About(models.Model):
     )
     category = models.ForeignKey(
         BaseCategory, 
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True
     )
@@ -142,7 +165,9 @@ class WorkingMode(models.Model):
     contact = models.ForeignKey(
         'Contact',
         verbose_name='Контакт',
-        on_delete=models.DO_NOTHING
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
     )
 
     def __str__(self):
@@ -175,7 +200,9 @@ class Phone(models.Model):
     contact = models.ForeignKey(
         'Contact',
         verbose_name='Контакт',
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
     )
 
     def __str__(self):
@@ -194,7 +221,9 @@ class Email(models.Model):
     contact = models.ForeignKey(
         'Contact',
         verbose_name='Контакт',
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True
     )
     def __str__(self):
         return f"{self.contact} {self.email}"
@@ -216,7 +245,7 @@ class Contact(models.Model):
     about = models.ForeignKey(
         'About',
         verbose_name='"о нас"',
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         blank=True,
         null=True,
         help_text='не выбирать если не надо отображать в пункте меню "о нас - контакты"'
@@ -224,7 +253,7 @@ class Contact(models.Model):
     object = models.ForeignKey(
         'Object',
         verbose_name='Объект',
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True
     )
@@ -264,20 +293,20 @@ class Managment(models.Model):
     object = models.ForeignKey(
         'Object',
         verbose_name='Объект',
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True
     )
     about = models.ForeignKey(
         About, 
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True
     )
     contact = models.ForeignKey(
         Contact,
         verbose_name="Контакты",
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True
     )
@@ -334,7 +363,7 @@ class Object(models.Model):
         verbose_name = 'Объект'
         verbose_name_plural = 'Объекты'
 
-    MAX_SHORT_NAME = 10
+    MAX_SHORT_NAME = 15
     MAX_LONG_NAME = 250
     
     short_name = models.CharField(
@@ -342,7 +371,7 @@ class Object(models.Model):
         max_length=MAX_SHORT_NAME,
         help_text=f'Короткое имя объекта (не более {MAX_SHORT_NAME} символов)'
     )
-    long_name = models.CharField(
+    name = models.CharField(
         'официальное имя', 
         max_length=MAX_LONG_NAME,
         help_text=f'Ролное официальное имя (не более {MAX_LONG_NAME}  символов)'
@@ -359,17 +388,19 @@ class Object(models.Model):
     category = models.ForeignKey(
         BaseCategory, 
         verbose_name='Категория',
-        on_delete=models.DO_NOTHING,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True
     )
     service = models.ManyToManyField(
         Service,
-        help_text='выберите доступные на объекте спортивные и прочие услуги, спортивные секции. '
+        help_text='выберите доступные на объекте спортивные и прочие услуги, спортивные секции. ',
+        null=True,
+        blank=True
     )
 
     def __str__(self):
-        return f'{self.short_name} ({self.long_name})'
+        return f'{self.short_name} ({self.name})'
 
     def display_service(self):
         '''Показать привязанные к объекту услуги (спортивные и прочие)'''
