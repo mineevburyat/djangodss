@@ -7,9 +7,9 @@
     line-height: 1;
 }
 
-.my-bg-test {
+.my-bg-section {
     background-color: #ccc;
-    min-height: 15vh;
-    border: 1px solid;
+    min-height: 75vh;
+    border: 1px solid red;
+    max-width: 530px;
 }
-
